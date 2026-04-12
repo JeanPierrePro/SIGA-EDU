@@ -1,1 +1,22 @@
+<<<<<<< HEAD
 @import "tailwindcss";
+=======
+/* Limpeza total de margens padrão do navegador */
+:root {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 100vw; /* Garante que o corpo ocupa toda a largura */
+  min-height: 100vh;
+  background-color: #0f172a; /* Cor de fundo escura */
+}
+
+#root {
+  width: 100%;
+}
+>>>>>>> 1bf33569935a99438fbe0df5d43263c55f5fb02d
