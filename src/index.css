@@ -1,6 +1,4 @@
-<<<<<<< HEAD
 @import "tailwindcss";
-=======
 /* Limpeza total de margens padrão do navegador */
 :root {
   margin: 0;
@@ -19,4 +17,3 @@ body {
 #root {
   width: 100%;
 }
->>>>>>> 1bf33569935a99438fbe0df5d43263c55f5fb02d
