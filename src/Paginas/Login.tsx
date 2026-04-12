@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { LogIn, ShieldAlert, Loader2 } from 'lucide-react';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -15,116 +16,78 @@ const Login: React.FC = () => {
         setErro('');
         
         try {
-            // Chamada ao backend na porta 5022
             const resposta = await axios.post('http://localhost:5022/api/auth/login', {
                 email,
                 password
             });
 
-            // 1. Guardar o Token e o utilizador na sessão do navegador
+            // SALVAMOS OS DADOS
             localStorage.setItem('token', resposta.data.token);
             localStorage.setItem('userEmail', email);
             
-            // Pegamos os cargos vindos do servidor (se houver)
-            const roles = resposta.data.roles || [];
+            // 🔎 DIAGNÓSTICO: Vamos ver o que o C# mandou exatamente
+            console.log("RESPOSTA COMPLETA DO SERVIDOR:", resposta.data);
             
-            // 2. LÓGICA DE REDIRECIONAMENTO INTELIGENTE
-            // Verificamos se é o teu email de admin ou se tem o cargo "Admin"
-            const eAdmin = email === 'portuga0462016@gmail.com' || 
-                           roles.some((r: string) => r.toLowerCase() === 'admin');
+            // Tentamos pegar o cargo de várias formas (array ou string única)
+            const rolesEnviadas = resposta.data.roles || (resposta.data.role ? [resposta.data.role] : []);
+            
+            console.log("CARGOS DETECTADOS:", rolesEnviadas);
 
-            if (eAdmin) {
-                console.log("Acesso Admin concedido!");
+            // BÚSSOLA DE REDIRECIONAMENTO (Super tolerante)
+            const isAdmin = rolesEnviadas.some((r: string) => r.toLowerCase() === 'admin') || email === 'portuga0462016@gmail.com';
+            const isExplicador = rolesEnviadas.some((r: string) => r.toLowerCase() === 'explicador');
+            const isAluno = rolesEnviadas.some((r: string) => r.toLowerCase() === 'aluno');
+
+            if (isAdmin) {
                 navigate('/admin');
             } 
-            else if (roles.includes('Professor')) {
-                // Se no futuro tiveres a rota /professor
+            else if (isExplicador) {
                 navigate('/professor');
             }
+            else if (isAluno) {
+                navigate('/aluno');
+            }
             else {
-                // Para alunos ou outros utilizadores
-                setErro('Área de aluno em desenvolvimento. Acesso restrito a administradores.');
+                // Se cair aqui, vamos mostrar o que o C# mandou no erro
+                setErro(`Perfil não reconhecido. O servidor enviou: ${rolesEnviadas.join(', ') || 'NADA'}`);
             }
 
         } catch (err: any) {
-            if (err.response && err.response.status === 401) {
-                setErro('E-mail ou palavra-passe incorretos.');
-            } else {
-                setErro('Erro de ligação ao servidor. Verifique se o Backend está ativo.');
-            }
-            console.error("Erro detalhado:", err);
+            console.error("ERRO NO LOGIN:", err);
+            setErro(err.response?.data?.message || 'Dados incorretos ou erro de servidor.');
         } finally {
             setCarregando(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-900 p-4">
-            <div className="w-full max-w-md bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-8">
-                
-                {/* Título do Portal */}
+        <div className="min-h-screen flex items-center justify-center bg-indigo-950 p-4">
+            <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-10 shadow-2xl">
                 <div className="text-center mb-10">
-                    <h1 className="text-4xl font-bold text-white tracking-tight mb-2">
-                        SIGA <span className="text-blue-300">EDU</span>
-                    </h1>
-                    <p className="text-blue-100/70 text-sm italic">Gestão Escolar Inteligente</p>
+                    <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                        <LogIn className="text-white w-8 h-8" />
+                    </div>
+                    <h1 className="text-4xl font-black text-white tracking-tighter uppercase">SIGA <span className="text-blue-400">EDU</span></h1>
+                    <p className="text-blue-200/50 text-[10px] uppercase font-bold tracking-widest mt-2">Gestão Escolar Inteligente</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
-                    {/* Alerta de Erro */}
                     {erro && (
-                        <div className="bg-red-500/20 border border-red-500/50 text-red-200 text-sm p-3 rounded-lg text-center animate-pulse">
-                            {erro}
+                        <div className="bg-red-500/20 border border-red-500/50 text-red-200 text-xs p-4 rounded-2xl flex items-center gap-3 animate-pulse">
+                            <ShieldAlert className="w-5 h-5 shrink-0" />
+                            <span>{erro}</span>
                         </div>
                     )}
 
-                    {/* Campo de Email */}
-                    <div>
-                        <label className="block text-sm font-medium text-blue-100 mb-1">E-mail</label>
-                        <input 
-                            type="email" 
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-blue-200/30 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-                            placeholder="exemplo@sigaedu.com"
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)} 
-                            required 
-                        />
+                    <div className="space-y-4">
+                        <input required type="email" placeholder="E-mail" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={email} onChange={e => setEmail(e.target.value)} />
+                        <input required type="password" placeholder="Palavra-passe" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all" value={password} onChange={e => setPassword(e.target.value)} />
                     </div>
 
-                    {/* Campo de Senha */}
-                    <div>
-                        <label className="block text-sm font-medium text-blue-100 mb-1">Palavra-passe</label>
-                        <input 
-                            type="password" 
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-blue-200/30 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-                            placeholder="••••••••"
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)} 
-                            required 
-                        />
-                    </div>
-
-                    {/* Botão de Submissão */}
-                    <button 
-                        type="submit" 
-                        disabled={carregando}
-                        className={`w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transform active:scale-95 transition-all flex items-center justify-center ${carregando ? 'opacity-70 cursor-not-allowed' : ''}`}
-                    >
-                        {carregando ? (
-                            <span className="flex items-center">
-                                <svg className="animate-spin h-5 w-5 mr-3 border-t-2 border-white rounded-full" viewBox="0 0 24 24"></svg>
-                                A validar...
-                            </span>
-                        ) : 'Entrar no Portal'}
+                    <button disabled={carregando} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-2xl shadow-xl transition-all active:scale-[0.98] flex items-center justify-center space-x-2">
+                        {carregando ? <Loader2 className="animate-spin" /> : <span>Entrar no Portal</span>}
                     </button>
                 </form>
-
-                {/* Direitos Autorais */}
-                <div className="mt-8 text-center border-t border-white/10 pt-6">
-                    <p className="text-blue-200/50 text-xs">
-                        &copy; 2026 Siga Edu - Sistema de Explicações
-                    </p>
-                </div>
             </div>
         </div>
     );

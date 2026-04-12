@@ -1,19 +1,26 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// Importação das Páginas
 import Login from './Paginas/Login';
 import Administrador from './Paginas/Administrador';
-
-// Se a Vishwa tiver criado ficheiros novos, podes importar aqui depois
-// import Professor from './Paginas/Professor';
-// import Aluno from './Paginas/Aluno';
+import ExplicadorPagina from './Paginas/ExplicadorPagina';
+import AlunoPagina from './Paginas/AlunoPagina';
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Rota Principal - Login */}
         <Route path="/" element={<Login />} />
+        
+        {/* Rota do Geraldo (Super Admin) */}
         <Route path="/admin" element={<Administrador />} />
-        {/* Adiciona as rotas da Vishwa aqui em baixo se precisares */}
-        {/* <Route path="/professor" element={<Professor />} /> */}
+        
+        {/* Rota dos Explicadores/Professores */}
+        <Route path="/professor" element={<ExplicadorPagina />} />
+        
+        {/* Rota dos Alunos */}
+        <Route path="/aluno" element={<AlunoPagina />} />
       </Routes>
     </Router>
   );
